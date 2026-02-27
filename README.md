@@ -1,7 +1,3 @@
-
-
----
-
 ````markdown
 # 🎬 Resilient Movie Recommendation System
 
@@ -191,7 +187,5 @@ This project demonstrates how resilient design patterns like Circuit Breakers im
 
 ```
 
----
 
-T
 ```
