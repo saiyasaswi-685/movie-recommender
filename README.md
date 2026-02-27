@@ -1,4 +1,3 @@
-
 ````markdown
 # 🎬 Resilient Movie Recommendation System
 
@@ -13,10 +12,10 @@ A fault-tolerant movie recommendation engine designed to demonstrate high availa
 
 The objective of this project is to build a resilient distributed system where the primary **Recommendation Service** continues functioning even when its dependent services (**User Profile Service** and **Content Service**) become slow, unavailable, or fail completely.
 
-This is achieved by implementing state-aware Circuit Breakers that handle:
+This is achieved by implementing state-aware Circuit Breakers that manage:
 
 - Failure thresholds  
-- Timeout management  
+- Timeout handling  
 - Automatic recovery  
 - Graceful degradation  
 
@@ -27,7 +26,7 @@ This is achieved by implementing state-aware Circuit Breakers that handle:
 The system consists of four containerized microservices communicating over a private Docker network:
 
 1. **Recommendation Service (Port 8080)**  
-   The core orchestrator that aggregates user preferences and content metadata.
+   The central orchestrator that aggregates user preferences and content metadata.
 
 2. **User Profile Service (Port 8081)**  
    A mock service that provides user preferences.
@@ -36,7 +35,7 @@ The system consists of four containerized microservices communicating over a pri
    A mock service that provides movie metadata.
 
 4. **Trending Service (Port 8083)**  
-   A high-availability fallback service providing trending movie recommendations.
+   A high-availability fallback service that provides trending movie recommendations.
 
 ---
 
@@ -44,17 +43,17 @@ The system consists of four containerized microservices communicating over a pri
 
 Each dependent service is protected by an independent Circuit Breaker implementing the following states:
 
-### 🔹 CLOSED
+### CLOSED
 - Normal operation  
 - Requests flow normally to the dependent service  
 
-### 🔹 OPEN
-- Triggered when failure threshold is exceeded  
+### OPEN
+- Triggered when the failure threshold is exceeded  
 - Requests fail immediately (fail-fast)  
 - Prevents resource exhaustion and cascading failures  
 
-### 🔹 HALF-OPEN
-- Activated after cooldown period (30 seconds)  
+### HALF-OPEN
+- Activated after the cooldown period (30 seconds)  
 - Allows limited trial requests  
 - If successful → transitions to CLOSED  
 - If failed → returns to OPEN  
@@ -74,14 +73,12 @@ Each dependent service is protected by an independent Circuit Breaker implementi
 
 ## 🚀 Quick Start
 
-### 1️⃣ Prerequisites
+### Prerequisites
 
 - Docker  
 - Docker Compose  
 
-### 2️⃣ Setup
-
-Clone the repository and prepare the environment:
+### Setup
 
 ```bash
 git clone https://github.com/saiyasaswi-685/movie-recommender.git
@@ -89,9 +86,7 @@ cd movie-recommender
 cp .env.example .env
 ````
 
-### 3️⃣ Run the Application
-
-Start all services:
+### Run the Application
 
 ```bash
 docker-compose up --build
@@ -101,7 +96,7 @@ docker-compose up --build
 
 ## 🧪 Testing & Verification Guide
 
-### ✅ Step 1: Normal Operation
+### Step 1: Normal Operation
 
 Access:
 
@@ -109,14 +104,12 @@ Access:
 http://localhost:8080/recommendations/1
 ```
 
-**Expected Result:**
+Expected Result:
 A full JSON response containing user preferences and personalized movie recommendations.
 
 ---
 
-### ⚠️ Step 2: Trigger Graceful Degradation
-
-Simulate failure in the User Profile Service:
+### Step 2: Trigger Graceful Degradation
 
 ```bash
 curl -X POST http://localhost:8080/simulate/user-profile/fail
@@ -124,7 +117,7 @@ curl -X POST http://localhost:8080/simulate/user-profile/fail
 
 Refresh the recommendations endpoint multiple times.
 
-**Expected Result:**
+Expected Result:
 
 * Circuit transitions to OPEN
 * Response includes:
@@ -134,52 +127,46 @@ Refresh the recommendations endpoint multiple times.
 
 ---
 
-### 🔥 Step 3: Trigger Critical Fallback
-
-Simulate failure in both User and Content services:
+### Step 3: Trigger Critical Fallback
 
 ```bash
 curl -X POST http://localhost:8080/simulate/content/fail
 ```
 
-**Expected Result:**
-System returns trending movies from the `trending-service` with a degradation message.
+Expected Result:
+The system returns trending movies from the trending-service with a degradation message.
 
 ---
 
-### 🔄 Step 4: Automatic Recovery
+### Step 4: Automatic Recovery
 
-1. Restore services:
+```bash
+curl -X POST http://localhost:8080/simulate/user-profile/normal
+```
 
-   ```bash
-   curl -X POST http://localhost:8080/simulate/user-profile/normal
-   ```
-2. Wait 30 seconds (cooldown period)
-3. Refresh the recommendations endpoint
+Wait 30 seconds and refresh the recommendations endpoint.
 
-**Expected Result:**
-Circuit transitions from HALF-OPEN to CLOSED and resumes normal behavior.
+Expected Result:
+The circuit transitions from HALF-OPEN to CLOSED and resumes normal behavior.
 
 ---
 
-### 📊 Step 5: Monitor Circuit Status
-
-Check real-time breaker metrics:
+### Step 5: Monitor Circuit Status
 
 ```
-GET http://localhost:8080/metrics/circuit-breakers
+http://localhost:8080/metrics/circuit-breakers
 ```
 
 ---
 
 ## 📂 Repository Structure
 
-* `/recommendation-service` → Orchestration logic & circuit breaker implementation
-* `/user-profile-service` → Mock user preference API
-* `/content-service` → Mock movie metadata API
-* `/trending-service` → High-availability fallback service
-* `docker-compose.yml` → Full stack container orchestration
-* `.env.example` → Environment configuration template
+* `/recommendation-service`
+* `/user-profile-service`
+* `/content-service`
+* `/trending-service`
+* `docker-compose.yml`
+* `.env.example`
 
 ---
 
@@ -199,7 +186,4 @@ GET http://localhost:8080/metrics/circuit-breakers
 This project demonstrates how resilient design patterns like Circuit Breakers improve reliability in distributed systems by isolating failures, preventing cascading outages, and ensuring service continuity under stress conditions.
 
 ```
-
----
-
 ```
