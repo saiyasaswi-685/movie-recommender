@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "rootDir": "./src",            // Idhi unteనే red lines pothayi
+    "outDir": "./dist",            // Compiled files ikkadiki velthayi
+    "esModuleInterop": true,       // Import statements error rakunda chusthundhi
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,                // Stricter checking
+    "skipLibCheck": true,          // Library errors ni ignore chesthundhi
+    "moduleResolution": "node"
+  },
+  "include": ["src/**/*"],         // Src loni anni files ni scan cheyamantunnam
+  "exclude": ["node_modules"]
+}
