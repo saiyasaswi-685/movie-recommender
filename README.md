@@ -1,4 +1,3 @@
-Here is the comprehensive, portfolio-quality **README.md** for your repository. It includes all the verification steps we performed, the project objectives, and the technical requirements to ensure you pass the automated evaluation.
 
 ---
 
