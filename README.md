@@ -1,6 +1,4 @@
 
----
-
 ````markdown
 # 🎬 Resilient Movie Recommendation System
 
