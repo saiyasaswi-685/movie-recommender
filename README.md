@@ -1,7 +1,4 @@
 
----
-
-### **Final README.md Template**
 
 ```markdown
 # Resilient Movie Recommendation System 🎬
@@ -22,8 +19,6 @@ The system consists of four containerized microservices communicating over a pri
 2.  **User-Profile Service (Port 8081)**: Mock service providing user preferences.
 3.  **Content Service (Port 8082)**: Mock service providing movie metadata.
 4.  **Trending Service (Port 8083)**: A high-reliability service providing generic fallbacks.
-
-
 
 ---
 
@@ -67,13 +62,13 @@ docker-compose up --build
 
 ## 🧪 Verification & Testing Manual
 
-### Step 1: Normal Flow (Requirement #4)
+### Step 1: Normal Flow
 
 Access `http://localhost:8080/recommendations/1`.
 
 * **Expected**: Full JSON response with user preferences and specific movie recommendations.
 
-### Step 2: Trigger Graceful Degradation (Requirement #8)
+### Step 2: Trigger Graceful Degradation
 
 Simulate failure in the User Profile service:
 
@@ -86,7 +81,7 @@ Refresh the recommendations endpoint 5-10 times.
 
 * **Expected**: The circuit opens. The response shows `userId: "default"` and `"fallback": true`.
 
-### Step 3: Trigger Critical Fallback (Requirement #9)
+### Step 3: Trigger Critical Fallback
 
 Simulate failure in both User and Content services:
 
@@ -95,29 +90,20 @@ curl -X POST http://localhost:8080/simulate/content/fail
 
 ```
 
-* **Expected**: The system returns trending movies (e.g., RRR, Pushpa) from the `trending-service` with a degradation message.
+* **Expected**: The system returns trending movies from the `trending-service` with a degradation message.
 
-### Step 4: Auto-Recovery (Requirement #10)
+### Step 4: Auto-Recovery
 
 1. Restore services: `curl -X POST http://localhost:8080/simulate/user-profile/normal`.
 2. Wait **30 seconds**.
 3. Refresh the page.
 
-* **Expected**: Circuit transitions from HALF-OPEN to **CLOSED**. Normal data returns.
+* **Expected**: Circuit transitions from HALF-OPEN to **CLOSED**.
 
-### Step 5: Monitoring (Requirement #11)
+### Step 5: Monitoring
 
 Check real-time status:
 `GET http://localhost:8080/metrics/circuit-breakers`
-
----
-
-## 🛠 Tech Stack & Best Practices
-
-* **Environment Management**: Centralized config via `.env`.
-* **Dockerization**: Multi-stage builds for optimized images.
-* **Service Discovery**: Internal Docker DNS (e.g., `http://content-service:8082`).
-* **Resilience**: Custom Circuit Breaker logic ensuring <50ms response time when circuits are OPEN.
 
 ---
 
@@ -132,7 +118,7 @@ Check real-time status:
 
 ```
 
----
+
 
 
 ```
