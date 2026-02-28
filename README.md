@@ -185,7 +185,10 @@ http://localhost:8080/metrics/circuit-breakers
 
 This project demonstrates how resilient design patterns like Circuit Breakers improve reliability in distributed systems by isolating failures, preventing cascading outages, and ensuring service continuity under stress conditions.
 
-```
+````
+
+---
+
 
 
 ```
