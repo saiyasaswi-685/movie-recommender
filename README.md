@@ -1,23 +1,29 @@
-````markdown
+---
+
 # 🎬 Resilient Movie Recommendation System
 
-[![Architecture](https://img.shields.io/badge/Architecture-Microservices-blue)](https://github.com/saiyasaswi-685/movie-recommender)
-[![Resilience](https://img.shields.io/badge/Pattern-Circuit%20Breaker-green)](https://github.com/saiyasaswi-685/movie-recommender)
+A fault-tolerant movie recommendation engine designed to demonstrate **high availability**, **failure isolation**, and **cascading failure prevention** using the **Circuit Breaker Pattern**.
 
-A fault-tolerant movie recommendation engine designed to demonstrate high availability, failure isolation, and cascading failure prevention using the Circuit Breaker Pattern.
+---
+
+## 📺 Video Demonstration
+
+Watch the full architectural walk-through and live simulation of the circuit breaker states:
+
+**[Click here to watch the Demo on YouTube](https://youtu.be/XfNCyGB--jU)**
 
 ---
 
 ## 🎯 Objective
 
-The objective of this project is to build a resilient distributed system where the primary Recommendation Service continues functioning even when its dependent services (User Profile Service and Content Service) become slow, unavailable, or fail completely.
+The objective of this project is to build a resilient distributed system where the primary **Recommendation Service** continues functioning even when dependent services (User Profile or Content) become slow, unavailable, or fail completely.
 
-This is achieved by implementing state-aware Circuit Breakers that manage:
+**Key Resilience Features:**
 
-- Failure thresholds  
-- Timeout handling  
-- Automatic recovery  
-- Graceful degradation  
+* **Failure Thresholds:** Automatically trips after 5 consecutive failures.
+* **Timeout Handling:** Cuts connections after 2 seconds to prevent hanging.
+* **Automatic Recovery:** 30-second cooldown before attempting self-healing.
+* **Graceful Degradation:** Serves default preferences or trending data during outages.
 
 ---
 
@@ -25,49 +31,20 @@ This is achieved by implementing state-aware Circuit Breakers that manage:
 
 The system consists of four containerized microservices communicating over a private Docker network:
 
-1. Recommendation Service (Port 8080)  
-   The central orchestrator that aggregates user preferences and content metadata.
-
-2. User Profile Service (Port 8081)  
-   A mock service that provides user preferences.
-
-3. Content Service (Port 8082)  
-   A mock service that provides movie metadata.
-
-4. Trending Service (Port 8083)  
-   A high-availability fallback service that provides trending movie recommendations.
+1. **Recommendation Service (Port 8080):** The central orchestrator/gateway.
+2. **User Profile Service (Port 8081):** Mock service for user preferences.
+3. **Content Service (Port 8082):** Mock service for movie metadata.
+4. **Trending Service (Port 8083):** High-availability fallback service.
 
 ---
 
-## 🚦 Circuit Breaker Implementation
+## 🚦 Circuit Breaker States (Opossum Implementation)
 
-Each dependent service is protected by an independent Circuit Breaker implementing the following states:
-
-### CLOSED
-- Normal operation  
-- Requests flow normally to the dependent service  
-
-### OPEN
-- Triggered when the failure threshold is exceeded  
-- Requests fail immediately (fail-fast)  
-- Prevents resource exhaustion and cascading failures  
-
-### HALF-OPEN
-- Activated after the cooldown period (30 seconds)  
-- Allows limited trial requests  
-- If successful → transitions to CLOSED  
-- If failed → returns to OPEN  
-
----
-
-## ⚙️ Core Configuration
-
-- Request Timeout: 2 seconds  
-- Failure Threshold:  
-  - 5 consecutive failures  
-  OR  
-  - 50% failure rate within a rolling 10-request window  
-- Cooldown Duration: 30 seconds  
+| State | Behavior |
+| --- | --- |
+| **🟢 CLOSED** | Normal operation. Requests flow to dependent services. |
+| **🔴 OPEN** | Threshold exceeded. Requests **fail-fast** immediately to fallback logic. |
+| **🟡 HALF-OPEN** | After 30s cooldown. Allows a trial request to check if the service recovered. |
 
 ---
 
@@ -75,120 +52,121 @@ Each dependent service is protected by an independent Circuit Breaker implementi
 
 ### Prerequisites
 
-- Docker  
-- Docker Compose  
+* Docker & Docker Compose
+* Git
 
-### Setup
+### Setup & Run
 
 ```bash
+# 1. Clone the repo
 git clone https://github.com/saiyasaswi-685/movie-recommender.git
 cd movie-recommender
+
+# 2. Setup environment variables
 cp .env.example .env
-````
 
-### Run the Application
+# 3. Build and Start the services
+docker-compose up --build -d
 
-```bash
-docker compose up --build
 ```
 
 ---
 
 ## 🧪 Testing & Verification Guide
 
-### Step 1: Normal Operation
+### 1. Healthy State
 
-Access:
+* **URL:** `http://localhost:8080/recommendations/123`
+* **Expected:** Full JSON response with user data and personalized movies.
+* **Metrics:** `http://localhost:8080/metrics/circuit-breakers` shows `CLOSED`.
 
-```
-http://localhost:8080/recommendations/1
-```
+### 2. Trigger Failure (Graceful Degradation)
 
-Expected Result:
-A full JSON response containing user preferences and personalized movie recommendations.
-
----
-
-### Step 2: Trigger Graceful Degradation
-
-```
+```bash
+# Simulate a failure in User Service
 curl -X POST http://localhost:8080/simulate/user-profile/fail
-```
-
-Refresh the recommendations endpoint multiple times.
-
-Expected Result:
-
-* Circuit transitions to OPEN
-* Response includes:
-
-  * "userId": "default"
-  * "fallback": true
-
----
-
-### Step 3: Trigger Critical Fallback
 
 ```
+
+* **Action:** Refresh the Recommendation URL **5 times**.
+* **Result:** State changes to `OPEN`. You will see `userId: "default"` and `fallback: true` in the response.
+
+### 3. Critical Fallback (Trending Service)
+
+```bash
+# Simulate failure in Content Service as well
 curl -X POST http://localhost:8080/simulate/content/fail
-```
-
-Expected Result:
-The system returns trending movies from the trending-service with a degradation message.
-
----
-
-### Step 4: Automatic Recovery
 
 ```
+
+* **Result:** System returns **Trending Movies** with a message: *"Service temporarily degraded."*
+
+### 4. Automatic Self-Healing
+
+```bash
+# Restore User Service to normal
 curl -X POST http://localhost:8080/simulate/user-profile/normal
+
 ```
 
-Wait 30 seconds and refresh the recommendations endpoint.
-
-Expected Result:
-The circuit transitions from HALF-OPEN to CLOSED and resumes normal behavior.
+* **Action:** Wait **30 seconds** and refresh.
+* **Result:** Breaker moves to `HALF_OPEN` then `CLOSED` once the request succeeds.
 
 ---
 
-### Step 5: Monitor Circuit Status
+## 📊 Monitoring Endpoint
 
-```
-http://localhost:8080/metrics/circuit-breakers
+The system provides a real-time observability endpoint to monitor the health of all circuit breakers:
+`GET http://localhost:8080/metrics/circuit-breakers`
+
+**Sample Output:**
+
+```json
+{
+  "userProfileCircuitBreaker": {
+    "state": "OPEN",
+    "successfulCalls": 10,
+    "failedCalls": 5
+  },
+  "contentCircuitBreaker": {
+    "state": "CLOSED",
+    "successfulCalls": 15,
+    "failedCalls": 0
+  }
+}
+
 ```
 
 ---
 
 ## 📂 Repository Structure
 
-* /recommendation-service
-* /user-profile-service
-* /content-service
-* /trending-service
-* docker-compose.yml
-* .env.example
+```text
+.
+├── recommendation-service/   # Gateway with Circuit Breaker logic
+├── user-profile-service/     # Mock User API with Simulation logic
+├── content-service/          # Mock Content API
+├── trending-service/         # Fallback Service
+├── docker-compose.yml        # Orchestration
+└── .env.example              # Template for Config
+
+```
 
 ---
 
 ## 🧠 Key Concepts Demonstrated
 
-* Microservices Architecture
-* Circuit Breaker Pattern
-* Graceful Degradation
-* Fail-Fast Strategy
-* Automatic Recovery
-* Docker-based Deployment
+* **Microservices Orchestration:** Using Docker Compose.
+* **Fault Tolerance:** Preventing cascading failures via Opossum.
+* **Graceful Degradation:** Providing partial functionality instead of a 500 error.
+* **Observability:** Custom metrics for distributed state monitoring.
 
 ---
 
 ## 💡 Conclusion
 
-This project demonstrates how resilient design patterns like Circuit Breakers improve reliability in distributed systems by isolating failures, preventing cascading outages, and ensuring service continuity under stress conditions.
-
-````
+This project proves that resilient design patterns like **Circuit Breakers** are essential for distributed systems. By isolating failures and implementing fail-fast strategies, we ensure that the user experience remains stable even during partial system outages.
 
 ---
 
-
-
-```
+**Developed by [Sai Yasaswi**](https://www.google.com/search?q=https://github.com/saiyasaswi-685)
